@@ -98,5 +98,28 @@ if(!dress){
      
      }
 
+const rentedDress=async(_id)=>{
+  const dress=await Dress.findById(_id).exec()
+  if(!dress){
+    return false
+      }
+     
+      dress.rented=dress.rented+1;
+     
+      const MyUpdateDress=await dress.save()
+      return true;
 
-module.exports = {createDress,getDresses,getDressById,updateDress,deleteDress}
+}
+const unRentedDress=async(_id)=>{
+  const dress=await Dress.findById(_id).exec()
+  if(!dress){
+    return false
+      }
+     
+      dress.rented=dress.rented-1;
+     
+      const MyUpdateDress=await dress.save()
+      return true
+
+}
+module.exports = {createDress,getDresses,getDressById,updateDress,deleteDress,rentedDress,unRentedDress}

@@ -1,4 +1,7 @@
 const BookedDate = require('../models/BookedDate');
+const Dress=require("../models/Dress")
+const {rentedDress}=require("./dressController")
+const {unRentedDress}=require("./dressController")
 
 // יצירת תאריך השכרה חדש
 const createBookedDate = async (req, res) => {
@@ -7,14 +10,29 @@ const createBookedDate = async (req, res) => {
     return res.status(400).json({message:'required field is missing'})
 
   }
+  const dres=await Dress.findById({_id:dress});
+  if(!dres){
+    return res.status(400).json({message:"dress is not found"})
+  }
+  if(dres.quantity-dres.rented<=0){
+    return res.status(400).json({message:"out of stock"})
+  }
+  const rented=await rentedDress(dres._id);
+  if(!rented){
+    return res.status(400).json({message:"unsuccess"})
+  }
   const bookedDate = await BookedDate.create({dress,date,user})
   if(bookedDate){
     return res.status(201).json({success:true,
          message:`bookedDate ${dress} in ${date} for ${user} created successfuly`,
          })
  }
- else
-     return res.status(400).json({message:"failed"})
+ else{
+    const unRented=await unRentedDress(dres._id);
+    if(unRented){
+     return res.status(400).json({message:"failed"})}
+    }
+    return res.status(400).json({message:"rented is not good"})
    
   
 };
@@ -70,17 +88,26 @@ const updateBookedDate=async(req,res)=>{
 const deleteBookedDate=async(req,res)=>{
   const {_id}=req.params
   const bookedDate=await BookedDate.findById(_id).exec()
-
-if(!bookedDate){
-  return res.status(401).json({message:"not found"})
-
+  console.log(bookedDate);
+  if(bookedDate){
+  const dres=await Dress.findById({_id:bookedDate.dress._id});
+  if(!dres || !bookedDate){
+    return res.status(400).json({message:"not found"})
   }
+  const unRented=await unRentedDress(dres._id);
+  if(!unRented){
+   return res.status(400).json({message:"failed"})}
+  
+    
+
       await bookedDate.deleteOne()
       return res.status(201).json({success:true,
           message:`one bookedDate deleted successfuly`
-          })
+          })}
+          return res.status(400).json({message:"not found"})
+
      
-     }
+}
 
 // // קבלת כל תאריכי ההשכרות
 // const getBookedDates = async (req, res) => {
